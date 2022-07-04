@@ -12,6 +12,7 @@ Included a test site.db with some filler content
 
 ## Features:
 * Drag and drop upload images
+* If upload duplicate filenames it will add "_1", "_2" etc to end of filename automatically
 * Media library
 * Search
 * Markdown support with code highlighting
