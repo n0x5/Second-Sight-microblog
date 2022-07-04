@@ -18,3 +18,4 @@ Included a test site.db with some filler content
 * sqlite3 pagination
 * Default user is "admin" with password "password" (edit config.json to change)
 * Should work by just running "python app.py".
+* To delete database just delete the "database" folder and re-run "python app.py" and it will re-create the folder and db.
