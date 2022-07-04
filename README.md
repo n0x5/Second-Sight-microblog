@@ -1,4 +1,5 @@
 # Second Sight microblog
+## sqlite3 and Flask powered microblog with drag and drop upload, markdown and search.
 
 It should work right out of the box.
 Required packages:
@@ -9,4 +10,11 @@ Then run python app.py
 
 Included a test site.db with some filler content
 
-Includes drag and drop image upload. Still WIP
+## Features:
+* Drag and drop upload images
+* Media library
+* Search
+* Markdown support with code highlighting
+* sqlite3 pagination
+* Default user is "admin" with password "password" (edit config.json to change)
+* Should work by just running "python app.py".
