@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+{% for item in results %}
+<a href="/post/{{item[1]}}">{{item[2]}}</a> {{item[0]|safe}}<hr><br>
+
+{% endfor %}
+
+{% endblock %}

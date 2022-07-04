@@ -11,13 +11,16 @@
   </head>
   <div class="sidebar">
     <p>{% block b2 %}{% endblock %}</p>
+    <form method='post' action='/search/{{search}}'>
+    <div><input type='text' name='search' placeholder='Search'>
+    <input type='submit'>
+    </div>
+    </form>
     <p><a href="/">Home</a></p>
-    <p><a href="/about">About me</a></p>
-    <p><a href="/archive">Archive</a></p><br>
-    
+
     {% if session.logged_in %}
     <h4>Welcome {{user}}</h4>
-    <p><a href="/new">New blog post</a></p>
+    <p><a href="/new">New post</a></p>
     <p><a href="/library">Media library</a></p>
     {% else %}
     <p><a href="/login">Login</a></p>
@@ -25,6 +28,7 @@
     
   </div>
   <body>
+    <h4>{{count}} posts</h4>
     <div class="content">{% block content %}{% endblock %}</div>
   </body>
 </html>

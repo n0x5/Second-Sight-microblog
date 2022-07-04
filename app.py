@@ -14,6 +14,7 @@ import time
 
 app = Flask(__name__)
 
+posts_per_page = 7
 date_format = '%a %d, %Y'
 site_title = 'Second sight microblog'
 extension_list = ['codehilite', 'fenced_code', 'extra', 'meta', 'sane_lists', 'toc', 'wikilinks']
@@ -29,10 +30,23 @@ if not os.path.exists(db_path):
     conn.execute(sql)
     conn.close()
 
+
+@app.route("/search/", methods=['GET', 'POST'])
+def search(search=None):
+    if request.method == 'POST':
+        conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
+        search = request.form['search']
+        sql = 'select body, post_id, date, substr(body, instr(lower(body), "{}")-20, 75) from blog where body like ? order by date' .format(search.lower())
+        results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="200"'), item[1], \
+                datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql, ('%'+search+'%',))]
+        count = len(results)
+        conn.close()
+    return render_template('search.html', results=results, count=count, search=search)
+
 @app.route("/")
 def hello():
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql = 'select * from blog order by date desc limit 10'
+    sql = 'select * from blog order by date desc limit {}' .format(posts_per_page)
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql)]
     if len(results) != 0:
@@ -64,7 +78,7 @@ def hello():
 @app.route("/older/<after>")
 def older(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql_lower = 'select * from blog where date < ? order by date desc limit 10'
+    sql_lower = 'select * from blog where date < ? order by date desc limit {}' .format(posts_per_page)
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_lower, (after,))]
     highest_id = results[0][-1]
@@ -92,7 +106,7 @@ def older(after=None):
 @app.route("/newer/<after>")
 def newer(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql_higher2 = 'select * from blog where date > ? order by date limit 10'
+    sql_higher2 = 'select * from blog where date > ? order by date limit {}' .format(posts_per_page)
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_higher2, (after,))]
     results.reverse()
@@ -147,8 +161,11 @@ def post(post_id=None):
     sql = 'select * from blog where post_id == {}' .format(post_id)
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3]) for item in conn.execute(sql)]
+    sql2 = 'select date from blog'
+    results2 = [item for item in conn.execute(sql2)]
+    count = len(results2)
     conn.close()
-    return render_template('post.html', results=results, site_title=site_title, user=current_app.config['USERNAME'])
+    return render_template('post.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
 @app.route('/delete/<post_id>')
 def delete(post_id=None):
@@ -191,6 +208,16 @@ def upload_file_blog(date=None):
                     pass
             return redirect('/')
 
+@app.route('/library')
+def media_library():
+    upload = os.path.join(app.root_path, 'static', 'uploads')
+    list_img = []
+    for subdir, dirs, files in os.walk(upload):
+        for fn in files:
+            subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
+            list_img.append(subdir1)
+            list_img.reverse()
+    return render_template('media_library.html', site_title=site_title, user=current_app.config['USERNAME'], list_img=list_img)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
