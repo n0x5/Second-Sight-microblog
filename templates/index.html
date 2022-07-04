@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+<h1>Microblog test</h1>
+
+{% block content %}
+<h4>{{count}} blog posts</h4>
+{% for item in results %}
+{{item[4]}} <a href="/post/{{item[3]}}">{{item[2]}}</a>{% if session.logged_in %} - | <a href="/delete/{{item[3]}}">Delete post</a>{% endif %} {{item[0]|safe}} <hr><br>
+{% endfor %}
+
+{{lower_posts|safe}} | {{higher_posts|safe}}
+
+{% endblock %}

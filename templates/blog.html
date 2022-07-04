@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+  {% block content %}
+  <h2>Add entry</h2>
+  <form action="/new" method="post">
+    <dl>
+      <h3>Body:</h3> <textarea name="body" cols="80" rows="30">{{ post_text }}</textarea>
+      <dd><input type="submit" value="Post">
+    </dl>
+  </form>
+<h3>Upload images</h3>
+{% for item2 in list_img %}
+<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="5">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><br>
+{% endfor %}
+<form method="post" action="/blog-upload" class="dropzone" enctype="multipart/form-data">
+<input type="file" name="file">
+<input type="submit" value="Submit">
+</form>
+<script>
+  Dropzone.discover();
+</script>
+  {% endblock %}

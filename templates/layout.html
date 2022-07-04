@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    {% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzone.css') }}"> 
+    <script type="text/javascript" src="/static/dropzone-min.js"></script>
+    <title>{% block title %}{{request.path}} - {{site_title}}{% endblock %}</title>
+    <h1>{{site_title}} - {{request.path}}</h1>
+    {% endblock %}
+  </head>
+  <div class="sidebar">
+    <p>{% block b2 %}{% endblock %}</p>
+    <p><a href="/">Home</a></p>
+    <p><a href="/about">About me</a></p>
+    <p><a href="/archive">Archive</a></p><br>
+    
+    {% if session.logged_in %}
+    <h4>Welcome {{user}}</h4>
+    <p><a href="/new">New blog post</a></p>
+    <p><a href="/library">Media library</a></p>
+    {% else %}
+    <p><a href="/login">Login</a></p>
+    {% endif %}
+    
+  </div>
+  <body>
+    <div class="content">{% block content %}{% endblock %}</div>
+  </body>
+</html>
