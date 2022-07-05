@@ -173,6 +173,47 @@ def blog_new():
         conn.close()
         return redirect('/')
 
+@app.route('/edit/<post_id>', methods=['GET', 'POST'])
+def blog_edit(post_id=None):
+    if not session.get('logged_in'):
+        return 'access denied'
+    if request.method == 'GET':
+        conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
+        sql = 'select * from blog where post_id == {}' .format(post_id)
+        results = [item for item in conn.execute(sql)]
+        body = results[0][0]
+        upload = os.path.join(app.root_path, 'static', 'uploads')
+        list_img = []
+        list_img2 = []
+        list_img3 = []
+        try:
+            for subdir, dirs, files in os.walk(upload):
+                for fn in files:
+                    list_img.append(os.path.join(subdir, fn))
+            list_img2 = sorted(list_img, key=os.path.getmtime)
+            for item in list_img2:
+                fname = item.split(os.path.sep)
+                subdir1 = fname[-2]+'/'+fname[-1]
+                list_img3.append(subdir1)
+            list_img4 = list_img3[-4:]
+            list_img4.reverse()
+
+        except Exception:
+            list_img2 = []
+        if 'Hx-Trigger' in request.headers:
+            return render_template('blog_htmx.html', list_img=list_img4)
+        return render_template('blog.html', site_title=site_title, list_img=list_img4, user=current_app.config['USERNAME'], post_text=body)
+
+    if request.method == 'POST':
+        content = request.form['body']
+        date = int(time.time())
+        conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
+        sql = 'update blog set body = ? where id = ?'
+        conn.execute(sql, (content, post_id))
+        conn.commit()
+        conn.close()
+        return redirect('/post/{}' .format(post_id))
+
 @app.route('/post/<post_id>')
 def post(post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))

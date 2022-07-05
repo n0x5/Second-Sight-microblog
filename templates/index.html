@@ -4,7 +4,7 @@
 {% block content %}
 
 {% for item in results %}
-<a href="/post/{{item[3]}}">{{item[2]}}</a>{% if session.logged_in %} - | <a href="/delete/{{item[3]}}">Delete post</a>{% endif %} {{item[0]|safe}} <hr><br>
+<a href="/post/{{item[3]}}">{{item[2]}}</a>{% if session.logged_in %} - | <a href="/delete/{{item[3]}}">Delete post</a> | <a href="/edit/{{item[3]}}">Edit post</a>{% endif %} {{item[0]|safe}} <hr><br>
 {% endfor %}
 
 {{lower_posts|safe}} | {{higher_posts|safe}}

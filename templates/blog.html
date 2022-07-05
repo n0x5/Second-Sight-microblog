@@ -2,7 +2,7 @@
 
 {% extends "layout.html" %}
   {% block content %}
-  <h2>Add entry</h2>
+  <h2>Add/edit entry</h2>
   <form action="/new" method="post">
     <dl>
       <h3>Body:</h3> <textarea name="body" cols="80" rows="25">{{ post_text }}</textarea><br>
@@ -30,9 +30,13 @@ Dropzone.options.myDropzone = {
   paramName: "file",
   headers: '{ "My-Awesome-Header": "header value" }',
   accept: function(file, done) {
-      htmx.ajax('GET', '/new', '#innerMedia');
       return done();
-}
+  },
+  init: function () {
+      this.on("queuecomplete", function (file) {
+          htmx.ajax('GET', '/new', '#innerMedia');
+      })
+  }
 };
 
 window.onload = function() {
