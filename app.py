@@ -4,6 +4,8 @@ from flask import render_template
 from flask import request
 from flask import session
 from flask import redirect
+from flask import make_response
+from flask import jsonify
 from werkzeug.utils import secure_filename
 import json
 import os
@@ -137,16 +139,17 @@ def blog_new():
     if not session.get('logged_in'):
         return 'access denied'
     if request.method == 'GET':
-        
         upload = os.path.join(app.root_path, 'static', 'uploads')
         list_img = []
         for subdir, dirs, files in os.walk(upload):
             for fn in files:
                 subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
                 list_img.append(subdir1)
-                list_img2 = reversed(list_img[-5:])
-        if 'HX-Request' in request.headers:
+                list_img2 = reversed(list_img[-3:])
+        if 'Hx-Trigger' in request.headers:
             return render_template('blog_htmx.html', list_img=list_img2)
+        return render_template('blog.html', site_title=site_title, list_img=list_img2, user=current_app.config['USERNAME'])
+
     if request.method == 'POST':
         content = request.form['body']
         date = int(time.time())
@@ -156,7 +159,6 @@ def blog_new():
         conn.commit()
         conn.close()
         return redirect('/')
-    return render_template('blog.html', site_title=site_title, list_img=list_img2, user=current_app.config['USERNAME'])
 
 @app.route('/post/<post_id>')
 def post(post_id=None):
