@@ -261,10 +261,10 @@ def upload_file_blog(date=None):
             else:
                 digit = 1
                 split = filename.split('.')
-                filename2 = split[-0]+'_'+str(digit)+'.'+split[-1]
+                filename2 = '_'.join(split[0:-1])+'_'+str(digit)+'.'+split[-1]
                 while os.path.exists(os.path.join(datename, filename2)):
                     digit += 1
-                    filename2 = split[-0]+'_'+str(digit)+'.'+split[-1]
+                    filename2 = '_'.join(split[0:-1])+'_'+str(digit)+'.'+split[-1]
                 try:
                     file.save(os.path.join(datename, filename2))
                 except:
