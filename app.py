@@ -7,6 +7,8 @@ from flask import redirect
 from flask import make_response
 from flask import jsonify
 from werkzeug.utils import secure_filename
+from pygments import highlight
+from pygments.lexers import PythonLexer
 import json
 import os
 import sqlite3
@@ -202,13 +204,13 @@ def blog_edit(post_id=None):
             list_img2 = []
         if 'Hx-Trigger' in request.headers:
             return render_template('blog_htmx.html', list_img=list_img4)
-        return render_template('blog.html', site_title=site_title, list_img=list_img4, user=current_app.config['USERNAME'], post_text=body)
+        return render_template('blog_edit.html', site_title=site_title, list_img=list_img4, user=current_app.config['USERNAME'], post_text=body, post_id=post_id)
 
     if request.method == 'POST':
         content = request.form['body']
         date = int(time.time())
         conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-        sql = 'update blog set body = ? where id = ?'
+        sql = 'update blog set body = ? where post_id = ?'
         conn.execute(sql, (content, post_id))
         conn.commit()
         conn.close()

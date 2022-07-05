@@ -1,0 +1,48 @@
+
+
+{% extends "layout.html" %}
+  {% block content %}
+  <h2>Add/edit entry</h2>
+  <form action="/edit/{{ post_id }}" method="post">
+    <dl>
+      <h3>Body:</h3> <textarea name="body" cols="80" rows="25">{{ post_text }}</textarea><br>
+      <input type="submit" value="Post">
+    </dl>
+  </form>
+
+<div id="media_list" hx-target="#innerMedia" hx-get="/new" hx-trigger="load">
+<div id="innerMedia">
+{% for item2 in list_img %}
+<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><br>
+{% endfor %}
+</div>
+
+<div id="form_up">
+<form method="post" action="/blog-upload" class="dropzone" id="my-dropzone" enctype="multipart/form-data">
+<input type="file" name="file">
+<input type="submit" value="Submit">
+</form>
+</div>
+</div>
+
+<script>
+Dropzone.options.myDropzone = {
+  paramName: "file",
+  headers: '{ "My-Awesome-Header": "header value" }',
+  accept: function(file, done) {
+      return done();
+  },
+  init: function () {
+      this.on("queuecomplete", function (file) {
+          htmx.ajax('GET', '/new', '#innerMedia');
+      })
+  }
+};
+
+window.onload = function() {
+  Dropzone.discover();
+};
+</script>
+
+{% endblock %}
+
