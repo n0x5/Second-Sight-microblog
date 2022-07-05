@@ -3,7 +3,8 @@
   <head>
     {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='dropzone.css') }}"> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzone.css') }}">
+    <script type="text/javascript" src="/static/htmx.min.js"></script>
     <script type="text/javascript" src="/static/dropzone-min.js"></script>
     <title>{% block title %}{{request.path}} - {{site_title}}{% endblock %}</title>
     <h1>{{site_title}} - {{request.path}}</h1>

@@ -8,9 +8,11 @@
     </dl>
   </form>
 <h3>Upload images</h3>
+<div id="media_list" hx-target="#media_list" hx-get="/new" hx-trigger="load">
 {% for item2 in list_img %}
 <a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="5">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><br>
 {% endfor %}
+</div>
 <form method="post" action="/blog-upload" class="dropzone" enctype="multipart/form-data">
 <input type="file" name="file">
 <input type="submit" value="Submit">
