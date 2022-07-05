@@ -13,6 +13,8 @@ import sqlite3
 import markdown
 import datetime
 import time
+from pygments.lexers import PythonLexer
+from pygments.formatters import HtmlFormatter
 
 app = Flask(__name__)
 
@@ -141,11 +143,15 @@ def blog_new():
     if request.method == 'GET':
         upload = os.path.join(app.root_path, 'static', 'uploads')
         list_img = []
-        for subdir, dirs, files in os.walk(upload):
-            for fn in files:
-                subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
-                list_img.append(subdir1)
-                list_img2 = reversed(list_img[-3:])
+        list_img2 = []
+        try:
+            for subdir, dirs, files in os.walk(upload):
+                for fn in files:
+                    subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
+                    list_img.append(subdir1)
+                    list_img2 = reversed(list_img[-3:])
+        except Exception:
+            list_img2 = []
         if 'Hx-Trigger' in request.headers:
             return render_template('blog_htmx.html', list_img=list_img2)
         return render_template('blog.html', site_title=site_title, list_img=list_img2, user=current_app.config['USERNAME'])
