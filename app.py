@@ -169,6 +169,8 @@ def post(post_id=None):
 
 @app.route('/delete/<post_id>')
 def delete(post_id=None):
+    if not session.get('logged_in'):
+        return 'access denied'
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'delete from blog where post_id == {}' .format(post_id)
     conn.execute(sql)
