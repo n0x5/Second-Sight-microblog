@@ -67,7 +67,6 @@ def hello():
         sql_higher = 'select * from blog where date > ? order by date'
         results_higher = [item for item in conn.execute(sql_higher, (highest_id,))]
         if len(results_higher) != 0:
-            highest_id2 = results_higher[-1][-1]
             higher_posts = '<a href="/newer/{}">Newer entries</a>' .format(highest_id)
         else:
             higher_posts = ''
@@ -91,16 +90,13 @@ def older(after=None):
     lowest_id = results[-1][-1]
     sql_lower = 'select * from blog where date < ? order by date'
     results_lower = [item for item in conn.execute(sql_lower, (lowest_id,))]
-    results_lower.reverse()
     if len(results_lower) != 0:
         lower_posts = '<a href="/older/{}">Older entries</a>' .format(lowest_id)
     else:
         lower_posts = ''
     sql_higher = 'select * from blog where date > ? order by date'
     results_higher = [item for item in conn.execute(sql_higher, (highest_id,))]
-    results_higher.reverse()
     if len(results_higher) != 0:
-        highest_id2 = results_higher[-1][-1]
         higher_posts = '<a href="/newer/{}">Newer entries</a>' .format(highest_id)
     else:
         higher_posts = ''
@@ -120,16 +116,13 @@ def newer(after=None):
     lowest_id = results[-1][-1]
     sql_lower = 'select * from blog where date < ? order by date'
     results_lower = [item for item in conn.execute(sql_lower, (lowest_id,))]
-    results_lower.reverse()
     if len(results_lower) != 0:
         lower_posts = '<a href="/older/{}">Older entries</a>' .format(lowest_id)
     else:
         lower_posts = ''
     sql_higher = 'select * from blog where date > ? order by date'
     results_higher = [item for item in conn.execute(sql_higher, (highest_id,))]
-    results_higher.reverse()
     if len(results_higher) != 0:
-        highest_id2 = results_higher[-1][-1]
         higher_posts = '<a href="/newer/{}">Newer entries</a>' .format(highest_id)
     else:
         higher_posts = ''
