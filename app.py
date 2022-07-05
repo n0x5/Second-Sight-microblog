@@ -144,17 +144,24 @@ def blog_new():
         upload = os.path.join(app.root_path, 'static', 'uploads')
         list_img = []
         list_img2 = []
+        list_img3 = []
         try:
             for subdir, dirs, files in os.walk(upload):
                 for fn in files:
-                    subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
-                    list_img.append(subdir1)
-                    list_img2 = reversed(list_img[-3:])
+                    list_img.append(os.path.join(subdir, fn))
+            list_img2 = sorted(list_img, key=os.path.getmtime, reverse=True)
+            for item in list_img2:
+                fname = item.split(os.path.sep)
+                subdir1 = fname[-2]+'/'+fname[-1]
+                list_img3.append(subdir1)
+            list_img4 = list_img3[-4:]
+
         except Exception:
             list_img2 = []
         if 'Hx-Trigger' in request.headers:
-            return render_template('blog_htmx.html', list_img=list_img2)
-        return render_template('blog.html', site_title=site_title, list_img=list_img2, user=current_app.config['USERNAME'])
+            return render_template('blog_htmx.html', list_img=list_img4)
+        return render_template('blog.html', site_title=site_title, list_img=list_img4, user=current_app.config['USERNAME'])
+        #return str(list_img3)
 
     if request.method == 'POST':
         content = request.form['body']
