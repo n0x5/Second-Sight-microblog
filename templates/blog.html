@@ -3,8 +3,9 @@
 {% extends "layout.html" %}
   {% block content %}
   <h2>Add/edit entry</h2>
-  <form action="/new" method="post">
+  <form action="/new/{{post_type}}" method="post">
     <dl>
+      {% if post_type == 'page' %} <h3>Title:</h3> <textarea name="title" cols="80" rows="3">{{ post_title }}</textarea><br>{% endif %}
       <h3>Body:</h3> <textarea name="body" cols="80" rows="25">{{ post_text }}</textarea><br>
       <input type="submit" value="Post">
     </dl>
@@ -13,7 +14,7 @@
 <div id="media_list" hx-target="#innerMedia" hx-get="/new" hx-trigger="load">
 <div id="innerMedia">
 {% for item2 in list_img %}
-<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea> | Delete post<br>
+<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><br>
 {% endfor %}
 </div>
 
@@ -34,7 +35,7 @@ Dropzone.options.myDropzone = {
   },
   init: function () {
       this.on("queuecomplete", function (file) {
-          htmx.ajax('GET', '/new', '#innerMedia');
+          htmx.ajax('GET', '/new/{{post_type}}', '#innerMedia');
       })
   }
 };

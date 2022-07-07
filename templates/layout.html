@@ -20,8 +20,10 @@
 
     {% if session.logged_in %}
     <h4>Welcome {{user}} | ({{count}} posts)</h4>
-    <p><a href="/new">New post</a></p>
+    <p><a href="/new/post">New post</a></p>
+    <p><a href="/new/page">New page</a></p>
     <p><a href="/library">Media library</a></p>
+    <p><a href="/pages">Pages</a></p>
     {% else %}
     <p><a href="/login">Login</a></p>
     {% endif %}
