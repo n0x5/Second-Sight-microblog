@@ -13,7 +13,7 @@
 <div id="media_list" hx-target="#innerMedia" hx-get="/new" hx-trigger="load">
 <div id="innerMedia">
 {% for item2 in list_img %}
-<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><br>
+<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea> | Delete post<br>
 {% endfor %}
 </div>
 

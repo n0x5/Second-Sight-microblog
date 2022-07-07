@@ -201,7 +201,6 @@ def blog_edit(post_id=None):
 
     if request.method == 'POST':
         content = request.form['body']
-        date = int(time.time())
         conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
         sql = 'update blog set body = ? where post_id = ?'
         conn.execute(sql, (content, post_id))
@@ -240,11 +239,9 @@ def upload_file_blog(date=None):
         return 'access denied'
 
     if request.method == 'POST':
-        lst = []
         file = request.files['file']
         if file:
             filename = secure_filename(file.filename)
-            lst.append(filename)
             datename = os.path.join(upload, date)
             if not os.path.exists(datename):
                 os.makedirs(datename)
@@ -263,6 +260,14 @@ def upload_file_blog(date=None):
                 except:
                     pass
             return redirect('/')
+
+@app.route('/blog-upload/delete/<date>/<image>', methods=['GET', 'POST'])
+def delete_file_blog(date=None, image=None):
+    upload = os.path.join(app.root_path, 'static', 'uploads')
+    full_file = os.path.join(upload, date, image)
+    os.remove(full_file)
+    return redirect('/library')
+
 
 @app.route('/library')
 def media_library():
