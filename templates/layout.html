@@ -17,6 +17,7 @@
     </div>
     </form>
     <p><a href="/">Home</a></p>
+    <p><a href="/archive">Archive</a></p>
 
     {% if session.logged_in %}
     <h4>Welcome {{user}} | ({{count}} posts)</h4>
@@ -34,3 +35,5 @@
     <div class="content">{% block content %}{% endblock %}</div>
   </body>
 </html>
+
+post

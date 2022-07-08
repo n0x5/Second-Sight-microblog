@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+<h1>Microblog test</h1>
+
+{% block content %}
+<h2>{{count}} posts </h2>
+{% for item in results %}
+<div class="post">
+{{item[2]}} - <a href="/post/{{item[1]}}">{{item[3]}}</a>{% if session.logged_in %} - | <a href="/delete/{{item[1]}}">Delete post</a> | <a href="/edit/{{item[1]}}">Edit post</a>{% endif %}<br>
+</div>
+<hr>
+{% endfor %}
+
+{% endblock %}

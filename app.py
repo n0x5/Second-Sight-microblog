@@ -7,28 +7,25 @@ from flask import redirect
 from flask import make_response
 from flask import jsonify
 from werkzeug.utils import secure_filename
-from pygments import highlight
-from pygments.lexers import PythonLexer
 import json
 import os
 import sqlite3
 import markdown
 import datetime
 import time
-from pygments.lexers import PythonLexer
-from pygments.formatters import HtmlFormatter
 
 app = Flask(__name__)
 
 posts_per_page = 7
-date_format = '%a %d, %Y'
+date_format = '%d %b, %Y'
 site_title = 'Second sight microblog'
 extension_list = ['codehilite', 'fenced_code', 'extra', 'meta', 'sane_lists', 'toc', 'wikilinks']
 upload = os.path.join(app.root_path, 'static', 'uploads')
+images_to_show = 5
+db_path = os.path.join(app.root_path, 'database')
 
 # edit config.json
 app.config.from_file('config.json', load=json.load)
-db_path = os.path.join(app.root_path, 'database')
 
 if not os.path.exists(db_path):
     os.makedirs(db_path)
@@ -87,6 +84,7 @@ def hello():
         higher_posts = 'none'
         lower_posts = 'none'
     return render_template('index.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count, higher_posts=higher_posts, lower_posts=lower_posts)
+
 
 @app.route("/older/<after>")
 def older(after=None):
@@ -157,7 +155,7 @@ def new_post(post_type=None):
                 fname = item.split(os.path.sep)
                 subdir1 = fname[-2]+'/'+fname[-1]
                 list_img3.append(subdir1)
-            list_img4 = list_img3[-4:]
+            list_img4 = list_img3[-5:]
             list_img4.reverse()
 
         except Exception:
@@ -310,6 +308,16 @@ def media_library():
             list_img.append(subdir1)
             list_img.reverse()
     return render_template('media_library.html', site_title=site_title, user=current_app.config['USERNAME'], list_img=list_img)
+
+@app.route("/archive")
+def archive():
+    conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
+    sql = 'select body, post_id, date, substr(body, instr(lower(body), "")+0, 75) from blog where post_type = "post" order by date desc' 
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+                datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql)]
+    count = len(results)
+
+    return render_template('archive.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
