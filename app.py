@@ -47,7 +47,7 @@ def search(search=None):
     if request.method == 'POST':
         conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
         search = request.form['search']
-        sql = 'select body, post_id, date, substr(body, instr(lower(body), "{}")-20, 75) from blog where body like ? order by date' .format(search.lower())
+        sql = 'select body, post_id, date, substr(body, instr(lower(body), "%s")-20, 75) from blog where body like ? order by date' % search.lower()
         results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="200"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql, ('%'+search+'%',))]
         count = len(results)
@@ -57,7 +57,7 @@ def search(search=None):
 @app.route("/")
 def hello():
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql = 'select * from blog where post_type = "post" order by date desc limit {}' .format(posts_per_page)
+    sql = 'select * from blog where post_type = "post" order by date desc limit %s' % posts_per_page
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql)]
     if len(results) != 0:
@@ -66,13 +66,13 @@ def hello():
         sql_lower = 'select * from blog where date < ? and post_type = "post" order by date'
         results_lower = [item for item in conn.execute(sql_lower, (lowest_id,))]
         if len(results_lower) != 0:
-            lower_posts = '<a href="/older/{}">Older entries</a>' .format(lowest_id)
+            lower_posts = '<a href="/older/%s">Older entries</a>' % lowest_id
         else:
             lower_posts = ''
         sql_higher = 'select * from blog where date > ? and post_type = "post" order by date'
         results_higher = [item for item in conn.execute(sql_higher, (highest_id,))]
         if len(results_higher) != 0:
-            higher_posts = '<a href="/newer/{}">Newer entries</a>' .format(highest_id)
+            higher_posts = '<a href="/newer/%s">Newer entries</a>' % highest_id
         else:
             higher_posts = ''
         sql2 = 'select date from blog'
@@ -89,7 +89,7 @@ def hello():
 @app.route("/older/<after>")
 def older(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql_lower = 'select * from blog where date < ? and post_type = "post" order by date desc limit {}' .format(posts_per_page)
+    sql_lower = 'select * from blog where date < ? and post_type = "post" order by date desc limit %s' % posts_per_page
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_lower, (after,))]
     highest_id = results[0][-1]
@@ -97,13 +97,13 @@ def older(after=None):
     sql_lower = 'select * from blog where date < ? and post_type = "post" order by date'
     results_lower = [item for item in conn.execute(sql_lower, (lowest_id,))]
     if len(results_lower) != 0:
-        lower_posts = '<a href="/older/{}">Older entries</a>' .format(lowest_id)
+        lower_posts = '<a href="/older/%s">Older entries</a>' % lowest_id
     else:
         lower_posts = ''
     sql_higher = 'select * from blog where date > ? and post_type = "post" order by date'
     results_higher = [item for item in conn.execute(sql_higher, (highest_id,))]
     if len(results_higher) != 0:
-        higher_posts = '<a href="/newer/{}">Newer entries</a>' .format(highest_id)
+        higher_posts = '<a href="/newer/%s">Newer entries</a>' % highest_id
     else:
         higher_posts = ''
     sql2 = 'select date from blog'
@@ -115,7 +115,7 @@ def older(after=None):
 @app.route("/newer/<after>")
 def newer(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql_higher2 = 'select * from blog where date > ? and post_type = "post" order by date limit {}' .format(posts_per_page)
+    sql_higher2 = 'select * from blog where date > ? and post_type = "post" order by date limit %s' % posts_per_page
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_higher2, (after,))]
     results.reverse()
@@ -124,13 +124,13 @@ def newer(after=None):
     sql_lower = 'select * from blog where date < ? and post_type = "post" order by date'
     results_lower = [item for item in conn.execute(sql_lower, (lowest_id,))]
     if len(results_lower) != 0:
-        lower_posts = '<a href="/older/{}">Older entries</a>' .format(lowest_id)
+        lower_posts = '<a href="/older/%s">Older entries</a>' % lowest_id
     else:
         lower_posts = ''
     sql_higher = 'select * from blog where date > ? and post_type = "post" order by date'
     results_higher = [item for item in conn.execute(sql_higher, (highest_id,))]
     if len(results_higher) != 0:
-        higher_posts = '<a href="/newer/{}">Newer entries</a>' .format(highest_id)
+        higher_posts = '<a href="/newer/%s">Newer entries</a>' % highest_id
     else:
         higher_posts = ''
     sql2 = 'select date from blog'
@@ -185,7 +185,7 @@ def blog_edit(post_id=None):
         return 'access denied'
     if request.method == 'GET':
         conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-        sql = 'select * from blog where post_id == {}' .format(post_id)
+        sql = 'select * from blog where post_id == %s' % post_id
         results = [item for item in conn.execute(sql)]
         body = results[0][0]
         list_img = []
@@ -216,12 +216,12 @@ def blog_edit(post_id=None):
         conn.execute(sql, (content, post_id))
         conn.commit()
         conn.close()
-        return redirect('/post/{}' .format(post_id))
+        return redirect('/post/%s' % post_id)
 
 @app.route('/<page_title>-<post_id>')
 def page(page_title=None, post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql = 'select * from blog where post_id == {} and post_type == "page"' .format(post_id)
+    sql = 'select * from blog where post_id == %s and post_type == "page"' % post_id
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3]) for item in conn.execute(sql)]
     sql2 = 'select date from blog'
@@ -233,7 +233,7 @@ def page(page_title=None, post_id=None):
 @app.route('/post/<post_id>')
 def post(post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql = 'select * from blog where post_id == {}' .format(post_id)
+    sql = 'select * from blog where post_id == %s' % post_id
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3]) for item in conn.execute(sql)]
     sql2 = 'select date from blog'
@@ -257,7 +257,7 @@ def delete(post_id=None):
     if not session.get('logged_in'):
         return 'access denied'
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql = 'delete from blog where post_id == {}' .format(post_id)
+    sql = 'delete from blog where post_id == %s' % post_id
     conn.execute(sql)
     conn.commit()
     conn.close()
