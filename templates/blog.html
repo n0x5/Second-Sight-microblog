@@ -6,7 +6,7 @@
   <form action="/new/{{post_type}}" method="post">
     <dl>
       {% if post_type == 'page' %} <h3>Title:</h3> <textarea name="title" cols="80" rows="3">{{ post_title }}</textarea><br>{% endif %}
-      <h3>Body:</h3> <textarea name="body" cols="80" rows="25">{{ post_text }}</textarea><br>
+      <h3>Body:</h3> <textarea id="bodytext" name="body" cols="80" rows="25">{{ post_text }}</textarea><br>
       <input type="submit" value="Post">
     </dl>
   </form>
@@ -14,7 +14,8 @@
 <div id="media_list" hx-target="#innerMedia" hx-get="/new" hx-trigger="load">
 <div id="innerMedia">
 {% for item2 in list_img %}
-<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><br>
+<a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea class="text" cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><button onclick="copy()" type="button">Copy</button>
+<br>
 {% endfor %}
 </div>
 
@@ -27,10 +28,19 @@
 </div>
 
 <script>
+
+
 Dropzone.options.myDropzone = {
   paramName: "file",
   headers: '{ "My-Awesome-Header": "header value" }',
   accept: function(file, done) {
+        var dateObj = new Date();
+        var month = dateObj.getUTCMonth() + 1;
+        var day = dateObj.getUTCDate();
+        var year = dateObj.getUTCFullYear();
+        var dateObj = new Date();
+        newdate = year + '-' + ("0" + (month)).slice(-2) + '/';
+      document.getElementById("bodytext").value += "\r\n\[![](/static/uploads/"+newdate+file.name+")](/static/uploads/"+newdate+file.name+")\r\n";
       return done();
   },
   init: function () {
@@ -42,8 +52,11 @@ Dropzone.options.myDropzone = {
 
 window.onload = function() {
   Dropzone.discover();
+
 };
+
 </script>
+
 
 {% endblock %}
 

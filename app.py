@@ -205,7 +205,7 @@ def blog_edit(post_id=None):
 
         except Exception:
             list_img2 = []
-        if 'Hx-Trigger' in request.headers:
+        if 'Hx-Request' in request.headers:
             return render_template('blog_htmx.html', list_img=list_img4)
         return render_template('blog_edit.html', site_title=site_title, list_img=list_img4, user=current_app.config['USERNAME'], post_text=body, post_id=post_id)
 
