@@ -223,12 +223,12 @@ def page(page_title=None, post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'select * from blog where post_id == %s and post_type == "page"' % post_id
     results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
-                datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3]) for item in conn.execute(sql)]
+                datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[4]) for item in conn.execute(sql)]
     sql2 = 'select date from blog'
     results2 = [item for item in conn.execute(sql2)]
     count = len(results2)
     conn.close()
-    return render_template('post.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count, page_title=page_title)
+    return render_template('page.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count, page_title=page_title)
 
 @app.route('/post/<post_id>')
 def post(post_id=None):
@@ -242,15 +242,6 @@ def post(post_id=None):
     conn.close()
     return render_template('post.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
-@app.route("/pages")
-def list_pages():
-    conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
-    sql = 'select * from blog where post_type = "page" order by date desc' 
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
-                datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql)]
-    conn.close()
-    count = len(results)
-    return render_template('pages.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
 @app.route('/delete/<post_id>')
 def delete(post_id=None):
@@ -307,6 +298,8 @@ def media_library():
             subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
             list_img.append(subdir1)
             list_img.reverse()
+    if 'Hx-Request' in request.headers:
+        return render_template('blog_htmx.html', list_img=list_img)
     return render_template('media_library.html', site_title=site_title, user=current_app.config['USERNAME'], list_img=list_img)
 
 @app.route("/archive")
@@ -318,6 +311,16 @@ def archive():
     count = len(results)
 
     return render_template('archive.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
+
+@app.route("/pages")
+def list_pages():
+    conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
+    sql = 'select * from blog where post_type = "page" order by date desc' 
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+                datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2], item[4]) for item in conn.execute(sql)]
+    conn.close()
+    count = len(results)
+    return render_template('pages.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

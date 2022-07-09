@@ -1,5 +1,3 @@
-
-
 {% extends "layout.html" %}
   {% block content %}
   <h2>Add/edit entry</h2>
@@ -11,6 +9,13 @@
     </dl>
   </form>
 
+<div id="form_up">
+<form method="post" action="/blog-upload" class="dropzone" id="my-dropzone" enctype="multipart/form-data">
+<input type="file" name="file">
+<input type="submit" value="Submit">
+</form>
+</div>
+
 <div id="media_list" hx-target="#innerMedia" hx-get="/new" hx-trigger="load">
 <div id="innerMedia">
 {% for item2 in list_img %}
@@ -18,18 +23,9 @@
 <br>
 {% endfor %}
 </div>
-
-<div id="form_up">
-<form method="post" action="/blog-upload" class="dropzone" id="my-dropzone" enctype="multipart/form-data">
-<input type="file" name="file">
-<input type="submit" value="Submit">
-</form>
-</div>
 </div>
 
 <script>
-
-
 Dropzone.options.myDropzone = {
   paramName: "file",
   headers: '{ "My-Awesome-Header": "header value" }',
@@ -38,10 +34,9 @@ Dropzone.options.myDropzone = {
         var month = dateObj.getUTCMonth() + 1;
         var day = dateObj.getUTCDate();
         var year = dateObj.getUTCFullYear();
-        var dateObj = new Date();
         newdate = year + '-' + ("0" + (month)).slice(-2) + '/';
-      document.getElementById("bodytext").value += "\r\n\[![](/static/uploads/"+newdate+file.name+")](/static/uploads/"+newdate+file.name+")\r\n";
-      return done();
+        document.getElementById("bodytext").value += "\r\n\r\n\[![](/static/uploads/"+newdate+file.name+")](/static/uploads/"+newdate+file.name+")\r\n";
+        return done();
   },
   init: function () {
       this.on("queuecomplete", function (file) {
@@ -52,11 +47,8 @@ Dropzone.options.myDropzone = {
 
 window.onload = function() {
   Dropzone.discover();
-
 };
-
 </script>
 
 
 {% endblock %}
-

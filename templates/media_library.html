@@ -2,14 +2,38 @@
   {% block content %}
 <h3>Uploaded images</h3>
 
-<form method="post" action="/blog-upload" class="dropzone" enctype="multipart/form-data">
+<div id="form_up">
+<form method="post" action="/blog-upload" class="dropzone" id="my-dropzone" enctype="multipart/form-data">
 <input type="file" name="file">
 <input type="submit" value="Submit">
 </form>
-<script>
-  Dropzone.discover();
-</script>
+</div>
+
+<div id="media_list" hx-target="#innerMedia" hx-get="/library" hx-trigger="load">
+<div id="innerMedia">
 {% for item2 in list_img %}
 <a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><a style="position:relative;top:-13px" href="/blog-upload/delete/{{item2}}">Delete image</a><br>
 {% endfor %}
-  {% endblock %}
+</div>
+</div>
+
+<script>
+Dropzone.options.myDropzone = {
+  paramName: "file",
+  headers: '{ "My-Awesome-Header": "header value" }',
+  accept: function(file, done) {
+        return done();
+  },
+  init: function () {
+      this.on("queuecomplete", function (file) {
+          htmx.ajax('GET', '/library', '#innerMedia');
+      })
+  }
+};
+
+window.onload = function() {
+  Dropzone.discover();
+};
+</script>
+
+{% endblock %}
