@@ -13,6 +13,9 @@ import sqlite3
 import markdown
 import datetime
 import time
+from azure.storage.blob import BlobClient
+from azure.storage.blob import ContentSettings
+import mimetypes
 
 app = Flask(__name__)
 
@@ -24,8 +27,11 @@ upload = os.path.join(app.root_path, 'static', 'uploads')
 images_to_show = 5
 db_path = os.path.join(app.root_path, 'database')
 
+
 # edit config.json
 app.config.from_file('config.json', load=json.load)
+cdn = app.config['CDN']
+connection_string = app.config['CONNECTION_STRING']
 
 if not os.path.exists(db_path):
     os.makedirs(db_path)
@@ -42,23 +48,26 @@ except Exception:
     pass
 
 
+
 @app.route("/search/", methods=['GET', 'POST'])
 def search(search=None):
     if request.method == 'POST':
         conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
         search = request.form['search']
         sql = 'select body, post_id, date, substr(body, instr(lower(body), "%s")-20, 75) from blog where body like ? order by date' % search.lower()
-        results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="200"'), item[1], \
+        results = [(markdown.markdown(item[0], extensions=extension_list), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql, ('%'+search+'%',))]
         count = len(results)
         conn.close()
     return render_template('search.html', results=results, count=count, search=search)
 
+
 @app.route("/")
 def hello():
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'select * from blog where post_type = "post" order by date desc limit %s' % posts_per_page
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql)]
     if len(results) != 0:
         highest_id = results[0][-1]
@@ -90,7 +99,8 @@ def hello():
 def older(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql_lower = 'select * from blog where date < ? and post_type = "post" order by date desc limit %s' % posts_per_page
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_lower, (after,))]
     highest_id = results[0][-1]
     lowest_id = results[-1][-1]
@@ -116,7 +126,8 @@ def older(after=None):
 def newer(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql_higher2 = 'select * from blog where date > ? and post_type = "post" order by date limit %s' % posts_per_page
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_higher2, (after,))]
     results.reverse()
     highest_id = results[0][-1]
@@ -222,7 +233,8 @@ def blog_edit(post_id=None):
 def page(page_title=None, post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'select * from blog where post_id == %s and post_type == "page"' % post_id
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[4]) for item in conn.execute(sql)]
     sql2 = 'select date from blog'
     results2 = [item for item in conn.execute(sql2)]
@@ -234,7 +246,8 @@ def page(page_title=None, post_id=None):
 def post(post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'select * from blog where post_id == %s' % post_id
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3]) for item in conn.execute(sql)]
     sql2 = 'select date from blog'
     results2 = [item for item in conn.execute(sql2)]
@@ -270,6 +283,7 @@ def upload_file_blog(date=None):
             os.chmod(datename, 0o777)
             if not os.path.exists(os.path.join(datename, filename)):
                 file.save(os.path.join(datename, filename))
+                azure_blog(file, date, datename, filename)
             else:
                 digit = 1
                 split = filename.split('.')
@@ -279,9 +293,18 @@ def upload_file_blog(date=None):
                     filename2 = '_'.join(split[0:-1])+'_'+str(digit)+'.'+split[-1]
                 try:
                     file.save(os.path.join(datename, filename2))
+                    azure_blog(file, date, datename, filename2)
                 except:
                     pass
             return redirect('/')
+
+def azure_blog(file, date, datename, filename):
+    blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="uploads/{}/{}" .format(date, filename))
+    full_file = os.path.join(upload, datename, filename)
+    with open(full_file, "rb") as data:
+        mime2 = mimetypes.guess_type(filename)[0]
+        my_content_settings = ContentSettings(content_type=mime2)
+        blob.upload_blob(data, overwrite=True, content_settings=my_content_settings)
 
 @app.route('/blog-upload/delete/<date>/<image>', methods=['GET', 'POST'])
 def delete_file_blog(date=None, image=None):
@@ -293,14 +316,25 @@ def delete_file_blog(date=None, image=None):
 @app.route('/library')
 def media_library():
     list_img = []
-    for subdir, dirs, files in os.walk(upload):
-        for fn in files:
-            subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
-            list_img.append(subdir1)
-            list_img.reverse()
+    list_img2 = []
+    list_img3 = []
+    try:
+        for subdir, dirs, files in os.walk(upload):
+            for fn in files:
+                list_img.append(os.path.join(subdir, fn))
+        list_img2 = sorted(list_img, key=os.path.getmtime)
+        for item in list_img2:
+            fname = item.split(os.path.sep)
+            subdir1 = fname[-2]+'/'+fname[-1]
+            list_img3.append(subdir1)
+        list_img4 = list_img3
+        list_img4.reverse()
+
+    except Exception:
+        list_img2 = []
     if 'Hx-Request' in request.headers:
-        return render_template('blog_htmx.html', list_img=list_img)
-    return render_template('media_library.html', site_title=site_title, user=current_app.config['USERNAME'], list_img=list_img)
+        return render_template('blog_htmx.html', list_img=list_img4)
+    return render_template('media_library.html', site_title=site_title, user=current_app.config['USERNAME'], list_img=list_img4)
 
 @app.route("/archive")
 def archive():
