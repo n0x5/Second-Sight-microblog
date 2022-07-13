@@ -394,13 +394,18 @@ def gallery_index():
                     print('saving {}' .format(full_file))
                     im2 = im.resize(size, Image.LANCZOS)
                     im2.save(full_file, "JPEG", quality=90)
-                    folders = request.args.get('dir').split('\\')
-                    blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="{}/{}/{}/{}" .format(folders[0], folders[1], folder_gallery, entry.name))
+                    try:
+                        blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="static/{}/{}/{}/{}" .format(folders[0], folders[1], folder_gallery, entry.name))
+                    except:
+                        blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="static/{}/{}/{}" .format(folders[0], folder_gallery, entry.name))
                     with open(entry.path, "rb") as data:
                         mime2 = mimetypes.guess_type(entry.name)
                         my_content_settings = ContentSettings(content_type=mime2)
                         blob.upload_blob(data, overwrite=True, content_settings=my_content_settings)
-                    blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="{}/{}/{}/thumbs/{}" .format(folders[0], folders[1], folder_gallery, entry.name))
+                    try:
+                        blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="static/{}/{}/{}/thumbs/{}" .format(folders[0], folders[1], folder_gallery, entry.name))
+                    except:
+                        blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="static/{}/{}/thumbs/{}" .format(folders[0], folder_gallery, entry.name))
                     with open(full_file, "rb") as data:
                         mime2 = mimetypes.guess_type(entry.name)
                         my_content_settings = ContentSettings(content_type=mime2)

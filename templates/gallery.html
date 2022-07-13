@@ -6,7 +6,7 @@
 <div id="folderlist" style="display:block;">
 <h2>{{dirfold}}</h2>
 {% for item in dir_list %}
-<div style="float:left;padding:5px;" class="g-item"><a href="/gallery?dir={{root_gallery}}&folder={{item}}"><div class="folder"><img src="/static/OneDrive_Folder_Icon.png" /></div>
+<div style="float:left;padding:5px;" class="g-item"><a href="/gallery/?dir={{root_gallery}}&folder={{item}}"><div class="folder"><img src="/static/OneDrive_Folder_Icon.png" /></div>
 <div style="position: relative;top: -50px;color: black;text-align: center;font-weight: 900;font-size: 15px;" class="foldername">{{item}}</div></a></div>
 {% endfor %}
 </div>
