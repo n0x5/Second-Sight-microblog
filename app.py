@@ -16,6 +16,7 @@ import time
 from azure.storage.blob import BlobClient
 from azure.storage.blob import ContentSettings
 import mimetypes
+from PIL import Image
 
 app = Flask(__name__)
 
@@ -33,6 +34,7 @@ app.config.from_file('config.json', load=json.load)
 cdn = app.config['CDN']
 connection_string = app.config['CONNECTION_STRING']
 
+
 if not os.path.exists(db_path):
     os.makedirs(db_path)
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
@@ -46,7 +48,6 @@ try:
     conn.execute(sql)
 except Exception:
     pass
-
 
 
 @app.route("/search/", methods=['GET', 'POST'])
@@ -356,23 +357,75 @@ def list_pages():
     count = len(results)
     return render_template('pages.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        if request.form['username'] != current_app.config['USERNAME']:
-            error = 'Invalid username'
-        elif request.form['password'] != current_app.config['PASSWORD']:
-            error = 'Invalid password'
-        else:
-            session['logged_in'] = True
-            return redirect('/')
-    return render_template('login.html', error=error, user=current_app.config['USERNAME'])
+cdn2 = app.config['CDN2']
+
+@app.route('/gallery')
+@app.route('/gallery/')
+def gallery_index():
+    root_gallery = request.args.get('dir')
+    folder_gallery = request.args.get('folder')
+    folders = request.args.get('dir').split('\\')
+    path3 = os.path.join(app.root_path, 'static', root_gallery)
+    if folder_gallery:
+        root_gallery = os.path.join(root_gallery, folder_gallery)
+        thumbs2 = os.path.join(path3, folder_gallery, 'thumbs')
+        if not os.path.exists(thumbs2):
+            os.makedirs(thumbs2)
+    path = os.path.join(app.root_path, 'static', root_gallery)
+    path2 = os.path.join('static', root_gallery)
+    path_url = os.path.join('gallery', root_gallery)
+    dir_list = []
+    file_list = []
+    with os.scandir(path) as it:
+        for entry in it:
+            if entry.is_dir():
+                if 'thumbs' not in entry.name:
+                    dir_list.append(entry.name)
+            if entry.is_file():
+                file_list.append(entry.name)
+            try:
+                full_file = os.path.join(thumbs2, entry.name)
+                if not os.path.exists(full_file):
+                    width = 150
+                    im = Image.open(entry.path)
+                    widthper = (width/float(im.size[0]))
+                    heightsize = int((float(im.size[1])*float(widthper)))
+                    size = width, heightsize
+                    print('saving {}' .format(full_file))
+                    im2 = im.resize(size, Image.LANCZOS)
+                    im2.save(full_file, "JPEG", quality=90)
+                    folders = request.args.get('dir').split('\\')
+                    blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="{}/{}/{}/{}" .format(folders[0], folders[1], folder_gallery, entry.name))
+                    with open(entry.path, "rb") as data:
+                        mime2 = mimetypes.guess_type(entry.name)
+                        my_content_settings = ContentSettings(content_type=mime2)
+                        blob.upload_blob(data, overwrite=True, content_settings=my_content_settings)
+                    blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="media-1", blob_name="{}/{}/{}/thumbs/{}" .format(folders[0], folders[1], folder_gallery, entry.name))
+                    with open(full_file, "rb") as data:
+                        mime2 = mimetypes.guess_type(entry.name)
+                        my_content_settings = ContentSettings(content_type=mime2)
+                        blob.upload_blob(data, overwrite=True, content_settings=my_content_settings)
+            except Exception as e:
+                print(e)
+
+    if len(dir_list) != 0:
+        dirfold = 'Folders'
+    else:
+        dirfold = ''
+    if len(file_list) != 0:
+        filefold = 'Files'
+    else:
+        filefold = ''
+
+    return render_template('gallery.html', dir_list=dir_list, file_list=file_list, root_gallery=root_gallery, \
+                             path=path2, path_url=path_url, cdn2=cdn2, dirfold=dirfold, filefold=filefold, rooto=request.args.get('dir'))
+
 
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('inde22x'))
+
 
 
 if __name__ == "__main__":

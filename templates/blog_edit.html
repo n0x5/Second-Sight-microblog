@@ -5,12 +5,12 @@
   <h2>Add/edit entry</h2>
   <form action="/edit/{{ post_id }}" method="post">
     <dl>
-      <h3>Body:</h3> <textarea name="body" cols="80" rows="25">{{ post_text }}</textarea><br>
+      <h3>Body:</h3> <textarea name="body" id="bodytext" cols="80" rows="25">{{ post_text }}</textarea><br>
       <input type="submit" value="Post">
     </dl>
   </form>
 
-<div id="media_list" hx-target="#innerMedia" hx-get="/new" hx-trigger="load">
+<div id="media_list" hx-target="#innerMedia" hx-get="/edit/{{post_id}}" hx-trigger="load">
 <div id="innerMedia">
 {% for item2 in list_img %}
 <a href="/static/uploads/{{item2}}"><img width="50px" src="/static/uploads/{{item2}}" /></a><textarea cols="100", rows="2">[![](/static/uploads/{{item2}})](/static/uploads/{{item2}})</textarea><br>
@@ -30,11 +30,18 @@ Dropzone.options.myDropzone = {
   paramName: "file",
   headers: '{ "My-Awesome-Header": "header value" }',
   accept: function(file, done) {
-      return done();
+        var fname = file.name.replace(")", "").replace(" (", "_");
+        var dateObj = new Date();
+        var month = dateObj.getUTCMonth() + 1;
+        var day = dateObj.getUTCDate();
+        var year = dateObj.getUTCFullYear();
+        newdate = year + '-' + ("0" + (month)).slice(-2) + '/';
+        document.getElementById("bodytext").value += "\r\n\r\n\[![](/static/uploads/"+newdate+fname+")](/static/uploads/"+newdate+fname+")\r\n";
+        return done();
   },
   init: function () {
       this.on("queuecomplete", function (file) {
-          htmx.ajax('GET', '/new', '#innerMedia');
+          htmx.ajax('GET', '/edit/{{post_id}}', '#innerMedia');
       })
   }
 };
