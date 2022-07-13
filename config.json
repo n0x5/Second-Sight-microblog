@@ -1,6 +1,8 @@
 {
     "DEBUG": true,
-    "SECRET_KEY": "SECRET_KEY_DONT_TELL_ANYONE",
+    "SECRET_KEY": "SECRET_KEY",
     "USERNAME": "admin",
-    "PASSWORD": "password"
+    "PASSWORD": "password",
+    "CONNECTION_STRING": "AZURE_CONNECTION_STRING",
+    "CDN": "AZURE_URL_EXAMPLE_WINDOWS_NET"
 }
