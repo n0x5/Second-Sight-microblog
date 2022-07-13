@@ -1,6 +1,11 @@
 # Second Sight microblog
 ## sqlite3 and Flask powered microblog with drag and drop upload, markdown and search.
 
+## Azure test branch to use Azure as CDN
+pip install azure-storage-blob
+
+Fill out config.json Azure details (Connection string and Data lake root URL)
+
 It should work right out of the box.
 Required packages:
 
