@@ -11,6 +11,9 @@ Then run python app.py
 Included a test site.db with some filler content
 
 ## Features:
+
+### Added gallery with thumb creation ++
+
 * Drag and drop upload images
 * If upload duplicate filenames it will add "_1", "_2" etc to end of filename automatically
 * Media library
