@@ -13,8 +13,8 @@ import sqlite3
 import markdown
 import datetime
 import time
+import mimetypes
 from PIL import Image
-import traceback
 
 app = Flask(__name__)
 
@@ -26,8 +26,11 @@ upload = os.path.join(app.root_path, 'static', 'uploads')
 images_to_show = 5
 db_path = os.path.join(app.root_path, 'database')
 
+
 # edit config.json
 app.config.from_file('config.json', load=json.load)
+cdn = app.config['CDN']
+
 
 if not os.path.exists(db_path):
     os.makedirs(db_path)
@@ -50,17 +53,19 @@ def search(search=None):
         conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
         search = request.form['search']
         sql = 'select body, post_id, date, substr(body, instr(lower(body), "%s")-20, 75) from blog where body like ? order by date' % search.lower()
-        results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="200"'), item[1], \
+        results = [(markdown.markdown(item[0], extensions=extension_list), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql, ('%'+search+'%',))]
         count = len(results)
         conn.close()
     return render_template('search.html', results=results, count=count, search=search)
 
+
 @app.route("/")
 def hello():
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'select * from blog where post_type = "post" order by date desc limit %s' % posts_per_page
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql)]
     if len(results) != 0:
         highest_id = results[0][-1]
@@ -92,7 +97,8 @@ def hello():
 def older(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql_lower = 'select * from blog where date < ? and post_type = "post" order by date desc limit %s' % posts_per_page
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_lower, (after,))]
     highest_id = results[0][-1]
     lowest_id = results[-1][-1]
@@ -118,7 +124,8 @@ def older(after=None):
 def newer(after=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql_higher2 = 'select * from blog where date > ? and post_type = "post" order by date limit %s' % posts_per_page
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[2]) for item in conn.execute(sql_higher2, (after,))]
     results.reverse()
     highest_id = results[0][-1]
@@ -224,7 +231,8 @@ def blog_edit(post_id=None):
 def page(page_title=None, post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'select * from blog where post_id == %s and post_type == "page"' % post_id
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3], item[4]) for item in conn.execute(sql)]
     sql2 = 'select date from blog'
     results2 = [item for item in conn.execute(sql2)]
@@ -236,7 +244,8 @@ def page(page_title=None, post_id=None):
 def post(post_id=None):
     conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
     sql = 'select * from blog where post_id == %s' % post_id
-    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img', '<img width="500"'), item[1], \
+    results = [(markdown.markdown(item[0], extensions=extension_list).replace('<img alt="" src="/static/uploads/', \
+                '<img width="500" src="{}' .format(cdn)).replace('<a href="/static/uploads/', '<a href="{}' .format(cdn)), item[1], \
                 datetime.datetime.fromtimestamp(item[2]).strftime(date_format), item[3]) for item in conn.execute(sql)]
     sql2 = 'select date from blog'
     results2 = [item for item in conn.execute(sql2)]
@@ -285,6 +294,7 @@ def upload_file_blog(date=None):
                     pass
             return redirect('/')
 
+
 @app.route('/blog-upload/delete/<date>/<image>', methods=['GET', 'POST'])
 def delete_file_blog(date=None, image=None):
     full_file = os.path.join(upload, date, image)
@@ -295,14 +305,25 @@ def delete_file_blog(date=None, image=None):
 @app.route('/library')
 def media_library():
     list_img = []
-    for subdir, dirs, files in os.walk(upload):
-        for fn in files:
-            subdir1 = subdir.split(os.path.sep)[-1]+'/'+fn
-            list_img.append(subdir1)
-            list_img.reverse()
+    list_img2 = []
+    list_img3 = []
+    try:
+        for subdir, dirs, files in os.walk(upload):
+            for fn in files:
+                list_img.append(os.path.join(subdir, fn))
+        list_img2 = sorted(list_img, key=os.path.getmtime)
+        for item in list_img2:
+            fname = item.split(os.path.sep)
+            subdir1 = fname[-2]+'/'+fname[-1]
+            list_img3.append(subdir1)
+        list_img4 = list_img3
+        list_img4.reverse()
+
+    except Exception:
+        list_img2 = []
     if 'Hx-Request' in request.headers:
-        return render_template('blog_htmx.html', list_img=list_img)
-    return render_template('media_library.html', site_title=site_title, user=current_app.config['USERNAME'], list_img=list_img)
+        return render_template('blog_htmx.html', list_img=list_img4)
+    return render_template('media_library.html', site_title=site_title, user=current_app.config['USERNAME'], list_img=list_img4)
 
 @app.route("/archive")
 def archive():
@@ -324,14 +345,16 @@ def list_pages():
     count = len(results)
     return render_template('pages.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
-cdn2 = ''
 
 @app.route('/gallery')
 @app.route('/gallery/')
 def gallery_index():
     root_gallery = request.args.get('dir')
     folder_gallery = request.args.get('folder')
-    folders = request.args.get('dir').split('\\')
+    if root_gallery is None and folder_gallery is None:
+        return render_template('gallery_index.html')
+
+    folders = root_gallery.split('\\')
     path3 = os.path.join(app.root_path, 'static', root_gallery)
     if folder_gallery:
         root_gallery = os.path.join(root_gallery, folder_gallery)
@@ -373,8 +396,9 @@ def gallery_index():
     else:
         filefold = ''
 
-    return render_template('gallery.html', dir_list=dir_list, file_list=file_list, root_gallery=root_gallery, \
-                             path=path2, path_url=path_url, cdn2=cdn2, dirfold=dirfold, filefold=filefold, rooto=request.args.get('dir'))
+    return render_template('gallery.html', dir_list=sorted(dir_list), file_list=sorted(file_list), root_gallery=root_gallery, \
+                             path=path2, path_url=path_url, dirfold=dirfold, filefold=filefold, rooto=request.args.get('dir'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
@@ -392,6 +416,11 @@ def login():
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('inde22x'))
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 
 if __name__ == "__main__":

@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 Format Code List
 The table below shows all the codes that you can pass to the strftime() method.
 
