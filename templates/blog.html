@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
   {% block content %}
+
   <h2>Add/edit entry</h2>
   <form action="/new/{{post_type}}" method="post">
     <dl>
@@ -30,12 +31,13 @@ Dropzone.options.myDropzone = {
   paramName: "file",
   headers: '{ "My-Awesome-Header": "header value" }',
   accept: function(file, done) {
+        var fname = file.name.replace(")", "").replace(" (", "_");
         var dateObj = new Date();
         var month = dateObj.getUTCMonth() + 1;
         var day = dateObj.getUTCDate();
         var year = dateObj.getUTCFullYear();
         newdate = year + '-' + ("0" + (month)).slice(-2) + '/';
-        document.getElementById("bodytext").value += "\r\n\r\n\[![](/static/uploads/"+newdate+file.name+")](/static/uploads/"+newdate+file.name+")\r\n";
+        document.getElementById("bodytext").value += "\r\n\r\n\[![](/static/uploads/"+newdate+fname+")](/static/uploads/"+newdate+fname+")\r\n";
         return done();
   },
   init: function () {
