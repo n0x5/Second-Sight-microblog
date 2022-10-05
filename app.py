@@ -345,6 +345,11 @@ def list_pages():
     count = len(results)
     return render_template('pages.html', results=results, site_title=site_title, user=current_app.config['USERNAME'], count=count)
 
+def sort_folder(fn):
+    result = re.search(r'New folder \((.+?)\)', fn)
+    if result is None:
+        return 0
+    return int(result.group(1))
 
 @app.route('/gallery')
 @app.route('/gallery/')
@@ -395,8 +400,8 @@ def gallery_index():
         filefold = 'Files'
     else:
         filefold = ''
-
-    return render_template('gallery.html', dir_list=sorted(dir_list), file_list=sorted(file_list), root_gallery=root_gallery, \
+    dir_list=sorted(dir_list, key=sort_folder)
+    return render_template('gallery.html', dir_list=dir_list, file_list=sorted(file_list), root_gallery=root_gallery, \
                              path=path2, path_url=path_url, dirfold=dirfold, filefold=filefold, rooto=request.args.get('dir'))
 
 @app.route('/login', methods=['GET', 'POST'])
