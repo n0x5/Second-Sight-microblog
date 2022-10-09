@@ -179,7 +179,7 @@ def new_post(post_type=None):
         else:
             title = ''
         content = request.form['body']
-        date = int(time.time())
+        date = time.time_ns()
         conn = sqlite3.connect(os.path.join(db_path, 'site.db'))
         sql = 'insert into blog (body, date, post_type, title) values (?,?,?,?)'
         conn.execute(sql, (content, date, post_type, title))
